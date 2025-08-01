@@ -365,8 +365,8 @@ Each microservice maintains its own dedicated PostgreSQL database, ensuring:
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd real-time-food-delivery-api
+   git clone https://github.com/Ayan7020/food-delivery-api.git
+   cd food-delivery-api
    ```
 
 2. **Environment Configuration**
