@@ -74,20 +74,36 @@ async def update_order_status_controller(order_id: str, status: OrderStatusUpdat
             data={"status": status},
             include={"orders": True}  
         )
-        
-    if status == "CONFIRMED":
-            payload = {
+     
+    if status == "CONFIRMED": 
+        payload = {
             "order_id": str(order_id)
-            }
-            await Broker.publish("assign-dilvery-agent-queue",payload)
+        }
+        try:
+            await Broker.publish("assign-dilvery-agent-queue", payload)
             return {
+                "status": True,
+                "message": f"Order confirmed successfully and queued for delivery agent assignment.",
+                "data": updated_order_group
+            }
+        except Exception as e:
+            print(f"[restaurant-service][order-status-update] Failed to publish to queue: {e}")
+            return {
+                "status": True,
+                "message": f"Order confirmed successfully, but delivery assignment queue notification failed. Please retry assignment manually.",
+                "data": updated_order_group
+            }
+    
+    elif status == "CANCELLED":
+        return {
             "status": True,
-            "message": f"Order group & child orders updated to {status} and queued for assign the agent to agent service.",
+            "message": "Order cancelled successfully.",
             "data": updated_order_group
-            }   
-
-    return {
-        "status": True,
-        "message": f"Order group & child orders updated to {status} and queued for assign the agent to agent service.",
-        "data": updated_order_group
-    } 
+        }
+    
+    else: 
+        return {
+            "status": True,
+            "message": f"Order status updated to {status} successfully.",
+            "data": updated_order_group
+        } 

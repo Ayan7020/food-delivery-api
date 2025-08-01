@@ -1,0 +1,765 @@
+{
+	"info": {
+		"_postman_id": "c8e3b4d5-f7a9-4b2c-8d1e-3f6g7h8i9j0k",
+		"name": "Real-Time Food Delivery System API",
+		"description": "Comprehensive API collection for the Real-Time Food Delivery microservices system. This collection includes all endpoints for User Service, Restaurant Service, and Delivery Service.\n\n## Services Overview:\n- **User Service** (Port 8001): Restaurant browsing, order placement, and rating submission\n- **Restaurant Service** (Port 8002): Restaurant management, menu handling, and order processing\n- **Delivery Service** (Port 8003): Delivery agent management and order assignment\n\n## Environment Variables:\n- `{{base_url_user}}`: http://localhost:8001\n- `{{base_url_restaurant}}`: http://localhost:8002\n- `{{base_url_delivery}}`: http://localhost:8003",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "User Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_user}}/health",
+							"host": [
+								"{{base_url_user}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check the health status of the User Service"
+					},
+					"response": []
+				},
+				{
+					"name": "Restaurant Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_restaurant}}/health",
+							"host": [
+								"{{base_url_restaurant}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check the health status of the Restaurant Service"
+					},
+					"response": []
+				},
+				{
+					"name": "Delivery Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_delivery}}/health",
+							"host": [
+								"{{base_url_delivery}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check the health status of the Delivery Service"
+					},
+					"response": []
+				}
+			],
+			"description": "Health check endpoints for all microservices"
+		},
+		{
+			"name": "User Service",
+			"item": [
+				{
+					"name": "Restaurants",
+					"item": [
+						{
+							"name": "Get Available Restaurants",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url_user}}/get-available-restaurants?hour=12",
+									"host": [
+										"{{base_url_user}}"
+									],
+									"path": [
+										"get-available-restaurants"
+									],
+									"query": [
+										{
+											"key": "hour",
+											"value": "12",
+											"description": "Hour of the day (0-23) to check restaurant availability"
+										}
+									]
+								},
+								"description": "Get list of restaurants available at a specific hour. The hour parameter ranges from 0 to 23."
+							},
+							"response": []
+						},
+						{
+							"name": "Place Order",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"user_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n  \"restaurants\": [\n    {\n      \"restaurant_id\": \"550e8400-e29b-41d4-a716-446655440002\",\n      \"items\": [\n        {\n          \"menu_item_id\": \"550e8400-e29b-41d4-a716-446655440003\",\n          \"quantity\": 2\n        },\n        {\n          \"menu_item_id\": \"550e8400-e29b-41d4-a716-446655440004\",\n          \"quantity\": 1\n        }\n      ]\n    },\n    {\n      \"restaurant_id\": \"550e8400-e29b-41d4-a716-446655440005\",\n      \"items\": [\n        {\n          \"menu_item_id\": \"550e8400-e29b-41d4-a716-446655440006\",\n          \"quantity\": 3\n        }\n      ]\n    }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url_user}}/place-order",
+									"host": [
+										"{{base_url_user}}"
+									],
+									"path": [
+										"place-order"
+									]
+								},
+								"description": "Place an order from multiple restaurants. This endpoint publishes the order to a message queue for processing by the Restaurant Service."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Ratings",
+					"item": [
+						{
+							"name": "Submit Delivery Agent Rating",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"user_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n  \"order_id\": \"550e8400-e29b-41d4-a716-446655440007\",\n  \"order_rating\": 4.5,\n  \"agent_rating\": 5.0\n}"
+								},
+								"url": {
+									"raw": "{{base_url_user}}/dilvery-agent-rating",
+									"host": [
+										"{{base_url_user}}"
+									],
+									"path": [
+										"dilvery-agent-rating"
+									]
+								},
+								"description": "Submit ratings for both the order and delivery agent. Only available for orders with 'DELIVERED' status. The system uses Redis caching to reduce repeated status checks and publishes rating data to RabbitMQ for processing by other services.\n\n**Rating Scale**: 1.0 - 5.0\n**Prerequisites**: Order must be in 'DELIVERED' status"
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"description": "User Service endpoints for restaurant browsing, order placement, and rating submission"
+		},
+		{
+			"name": "Restaurant Service",
+			"item": [
+				{
+					"name": "Restaurant Management",
+					"item": [
+						{
+							"name": "Add Restaurant",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Pizza Palace\",\n  \"description\": \"Authentic Italian pizzas with fresh ingredients\",\n  \"opening_time\": \"10:00:00\",\n  \"closing_time\": \"22:00:00\",\n  \"menu\": [\n    {\n      \"name\": \"Margherita Pizza\",\n      \"description\": \"Classic tomato, mozzarella, and basil pizza\",\n      \"price\": 12.99,\n      \"type\": \"VEG\"\n    },\n    {\n      \"name\": \"Pepperoni Pizza\",\n      \"description\": \"Pepperoni with mozzarella cheese\",\n      \"price\": 15.99,\n      \"type\": \"NON_VEG\"\n    },\n    {\n      \"name\": \"Caesar Salad\",\n      \"description\": \"Fresh romaine lettuce with parmesan and croutons\",\n      \"price\": 8.99,\n      \"type\": \"VEG\"\n    }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url_restaurant}}/add-restaurant",
+									"host": [
+										"{{base_url_restaurant}}"
+									],
+									"path": [
+										"add-restaurant"
+									]
+								},
+								"description": "Create a new restaurant with its menu items. Each restaurant must have at least one menu item.\n\n**Food Types**: VEG, NON_VEG\n**Time Format**: HH:MM:SS (24-hour format)"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Available Restaurants",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url_restaurant}}/restaurants/available?hour=14",
+									"host": [
+										"{{base_url_restaurant}}"
+									],
+									"path": [
+										"restaurants",
+										"available"
+									],
+									"query": [
+										{
+											"key": "hour",
+											"value": "14",
+											"description": "Hour of the day (0-23) to check availability"
+										}
+									]
+								},
+								"description": "Get restaurants that are available (open) at a specific hour of the day."
+							},
+							"response": []
+						},
+						{
+							"name": "Update Restaurant",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Pizza Palace Premium\",\n  \"description\": \"Premium Italian pizzas with organic ingredients\",\n  \"opening_time\": \"11:00:00\",\n  \"closing_time\": \"23:00:00\",\n  \"status\": \"ONLINE\",\n  \"menu\": [\n    {\n      \"id\": \"existing-menu-item-id\",\n      \"name\": \"Updated Margherita Pizza\",\n      \"price\": 13.99\n    },\n    {\n      \"name\": \"New Veggie Supreme\",\n      \"description\": \"Loaded with fresh vegetables\",\n      \"price\": 16.99,\n      \"type\": \"VEG\"\n    },\n    {\n      \"id\": \"menu-item-to-delete\",\n      \"delete\": true\n    }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_url_restaurant}}/update-restaurants/{{restaurant_id}}",
+									"host": [
+										"{{base_url_restaurant}}"
+									],
+									"path": [
+										"update-restaurants",
+										"{{restaurant_id}}"
+									]
+								},
+								"description": "Update restaurant details and menu items. You can:\n- Update existing menu items (provide item ID)\n- Add new menu items (omit ID)\n- Delete menu items (set delete: true)\n\n**Note**: Rating field cannot be updated through this endpoint.\n**Restaurant Status**: ONLINE, OFFLINE"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Order Management",
+					"item": [
+						{
+							"name": "Get Orders",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url_restaurant}}/orders",
+									"host": [
+										"{{base_url_restaurant}}"
+									],
+									"path": [
+										"orders"
+									],
+									"query": [
+										{
+											"key": "order_id",
+											"value": "550e8400-e29b-41d4-a716-446655440007",
+											"disabled": true,
+											"description": "Filter by OrderGroup ID (optional)"
+										},
+										{
+											"key": "user_id",
+											"value": "550e8400-e29b-41d4-a716-446655440001",
+											"disabled": true,
+											"description": "Filter by User ID (optional)"
+										}
+									]
+								},
+								"description": "Retrieve orders (OrderGroups) with optional filters. You can filter by specific order_id or user_id, or get all orders if no filters are provided."
+							},
+							"response": []
+						},
+						{
+							"name": "Get Orders by Order ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url_restaurant}}/orders?order_id={{order_id}}",
+									"host": [
+										"{{base_url_restaurant}}"
+									],
+									"path": [
+										"orders"
+									],
+									"query": [
+										{
+											"key": "order_id",
+											"value": "{{order_id}}",
+											"description": "OrderGroup ID to filter orders"
+										}
+									]
+								},
+								"description": "Get specific order by OrderGroup ID"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Orders by User ID",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url_restaurant}}/orders?user_id={{user_id}}",
+									"host": [
+										"{{base_url_restaurant}}"
+									],
+									"path": [
+										"orders"
+									],
+									"query": [
+										{
+											"key": "user_id",
+											"value": "{{user_id}}",
+											"description": "User ID to filter orders"
+										}
+									]
+								},
+								"description": "Get all orders for a specific user"
+							},
+							"response": []
+						},
+						{
+							"name": "Change Order Status",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url_restaurant}}/change-order-status?order_id={{order_id}}",
+									"host": [
+										"{{base_url_restaurant}}"
+									],
+									"path": [
+										"change-order-status"
+									],
+									"query": [
+										{
+											"key": "order_id",
+											"value": "{{order_id}}",
+											"description": "OrderGroup ID to update"
+										}
+									]
+								},
+								"description": "Update the status of an order. When an order is confirmed, it triggers the delivery assignment process.\n\n**Available Statuses**: PENDING, CONFIRMED, CANCELLED"
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"description": "Restaurant Service endpoints for restaurant and order management"
+		},
+		{
+			"name": "Delivery Service",
+			"item": [
+				{
+					"name": "Agent Management",
+					"item": [
+						{
+							"name": "Add Delivery Agent",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"John Doe\",\n  \"userName\": \"john_delivery\",\n  \"gender\": \"MALE\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url_delivery}}/add-dilvery-agent",
+									"host": [
+										"{{base_url_delivery}}"
+									],
+									"path": [
+										"add-dilvery-agent"
+									]
+								},
+								"description": "Add a new delivery agent to the system. This is primarily for testing purposes.\n\n**Gender Options**: MALE, FEMALE\n**Initial Status**: AVAILABLE"
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Delivery Agents",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url_delivery}}/get-all-dilvery-agent",
+									"host": [
+										"{{base_url_delivery}}"
+									],
+									"path": [
+										"get-all-dilvery-agent"
+									]
+								},
+								"description": "Get a list of all delivery agents along with their current assignments. Useful for monitoring agent availability and active deliveries. This is primarily for testing purposes."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Delivery Management",
+					"item": [
+						{
+							"name": "Update Delivery Status",
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"order_id\": \"550e8400-e29b-41d4-a716-446655440007\",\n  \"status\": \"PICKED_UP\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url_delivery}}/update-dilvery-status",
+									"host": [
+										"{{base_url_delivery}}"
+									],
+									"path": [
+										"update-dilvery-status"
+									]
+								},
+								"description": "Update the status of a delivery assignment. When an order is marked as DELIVERED or CANCELLED, the assigned delivery agent automatically becomes AVAILABLE again.\n\n**Status Options**:\n- PICKED_UP: Agent has picked up the order\n- DELIVERED: Order has been delivered successfully\n- CANCELLED: Delivery was cancelled"
+							},
+							"response": []
+						},
+						{
+							"name": "Get Delivery Status",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url_delivery}}/get-delivery-status?order_id={{order_id}}",
+									"host": [
+										"{{base_url_delivery}}"
+									],
+									"path": [
+										"get-delivery-status"
+									],
+									"query": [
+										{
+											"key": "order_id",
+											"value": "{{order_id}}",
+											"description": "Order ID to check delivery status"
+										}
+									]
+								},
+								"description": "Get the current delivery status for a specific order ID. This endpoint is used by other services to verify delivery status before allowing certain operations (like rating submission)."
+							},
+							"response": []
+						}
+					]
+				}
+			],
+			"description": "Delivery Service endpoints for agent and delivery management"
+		},
+		{
+			"name": "Complete Order Flow",
+			"item": [
+				{
+					"name": "1. Get Available Restaurants",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_user}}/get-available-restaurants?hour=12",
+							"host": [
+								"{{base_url_user}}"
+							],
+							"path": [
+								"get-available-restaurants"
+							],
+							"query": [
+								{
+									"key": "hour",
+									"value": "12",
+									"description": "Current hour (0-23)"
+								}
+							]
+						},
+						"description": "Step 1: Browse available restaurants at current hour"
+					},
+					"response": []
+				},
+				{
+					"name": "2. Place Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n  \"restaurants\": [\n    {\n      \"restaurant_id\": \"550e8400-e29b-41d4-a716-446655440002\",\n      \"items\": [\n        {\n          \"menu_item_id\": \"550e8400-e29b-41d4-a716-446655440003\",\n          \"quantity\": 2\n        }\n      ]\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url_user}}/place-order",
+							"host": [
+								"{{base_url_user}}"
+							],
+							"path": [
+								"place-order"
+							]
+						},
+						"description": "Step 2: Place order (publishes to place-order-queue)"
+					},
+					"response": []
+				},
+				{
+					"name": "3. Check Order Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_restaurant}}/orders?order_id={{order_id}}",
+							"host": [
+								"{{base_url_restaurant}}"
+							],
+							"path": [
+								"orders"
+							],
+							"query": [
+								{
+									"key": "order_id",
+									"value": "{{order_id}}",
+									"description": "Order ID from step 2"
+								}
+							]
+						},
+						"description": "Step 3: Check if order was processed (should be PENDING)"
+					},
+					"response": []
+				},
+				{
+					"name": "4. Confirm Order",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_restaurant}}/change-order-status?order_id={{order_id}}",
+							"host": [
+								"{{base_url_restaurant}}"
+							],
+							"path": [
+								"change-order-status"
+							],
+							"query": [
+								{
+									"key": "order_id",
+									"value": "{{order_id}}"
+								}
+							]
+						},
+						"description": "Step 4: Restaurant confirms order (triggers delivery assignment)"
+					},
+					"response": []
+				},
+				{
+					"name": "5. Check Delivery Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url_delivery}}/get-delivery-status?order_id={{order_id}}",
+							"host": [
+								"{{base_url_delivery}}"
+							],
+							"path": [
+								"get-delivery-status"
+							],
+							"query": [
+								{
+									"key": "order_id",
+									"value": "{{order_id}}"
+								}
+							]
+						},
+						"description": "Step 5: Check if delivery agent was assigned (should be PENDING)"
+					},
+					"response": []
+				},
+				{
+					"name": "6. Update to Picked Up",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"status\": \"PICKED_UP\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_delivery}}/update-dilvery-status",
+							"host": [
+								"{{base_url_delivery}}"
+							],
+							"path": [
+								"update-dilvery-status"
+							]
+						},
+						"description": "Step 6: Agent picks up the order"
+					},
+					"response": []
+				},
+				{
+					"name": "7. Mark as Delivered",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_id\": \"{{order_id}}\",\n  \"status\": \"DELIVERED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url_delivery}}/update-dilvery-status",
+							"host": [
+								"{{base_url_delivery}}"
+							],
+							"path": [
+								"update-dilvery-status"
+							]
+						},
+						"description": "Step 7: Agent completes delivery (agent becomes AVAILABLE again)"
+					},
+					"response": []
+				},
+				{
+					"name": "8. Submit Rating",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": \"550e8400-e29b-41d4-a716-446655440001\",\n  \"order_id\": \"{{order_id}}\",\n  \"order_rating\": 4.5,\n  \"agent_rating\": 5.0\n}"
+						},
+						"url": {
+							"raw": "{{base_url_user}}/dilvery-agent-rating",
+							"host": [
+								"{{base_url_user}}"
+							],
+							"path": [
+								"dilvery-agent-rating"
+							]
+						},
+						"description": "Step 8: User submits rating (broadcasts to ratings-exchange)"
+					},
+					"response": []
+				}
+			],
+			"description": "Complete order flow from placing order to delivery and rating. Follow these steps in sequence to test the entire system workflow."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url_user",
+			"value": "http://localhost:8001",
+			"type": "string"
+		},
+		{
+			"key": "base_url_restaurant",
+			"value": "http://localhost:8002",
+			"type": "string"
+		},
+		{
+			"key": "base_url_delivery",
+			"value": "http://localhost:8003",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "550e8400-e29b-41d4-a716-446655440001",
+			"type": "string"
+		},
+		{
+			"key": "restaurant_id",
+			"value": "550e8400-e29b-41d4-a716-446655440002",
+			"type": "string"
+		},
+		{
+			"key": "order_id",
+			"value": "550e8400-e29b-41d4-a716-446655440007",
+			"type": "string"
+		}
+	]
+}
