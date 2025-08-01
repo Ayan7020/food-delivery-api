@@ -1,0 +1,27 @@
+generator client {
+    provider  = "prisma-client-py"
+    interface = "asyncio"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model userOrder {
+    id       String @id @default(uuid())
+    user_id  String
+    order_id String
+
+    rating   userRating?
+    
+    @@unique([user_id, order_id])
+}
+
+model userRating {
+    id           String @id @default(uuid()) 
+    order_rating Float
+    agent_rating Float
+    user_order_id String   @unique
+    user_order    userOrder @relation(fields: [user_order_id], references: [id], onDelete: Cascade)
+}

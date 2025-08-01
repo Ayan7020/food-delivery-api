@@ -1,0 +1,48 @@
+generator client {
+    provider  = "prisma-client-py"
+    interface = "asyncio"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum Gender {
+    MALE
+    FEMALE
+}
+
+enum AgentStatus {
+    AVAILABLE
+    BUSY
+}
+
+enum DeliveryStatus {
+    PENDING
+    PICKED_UP
+    DELIVERED
+    CANCELLED
+}
+
+model DilveryAgent {
+    id           String               @id @default(uuid())
+    name         String
+    userName     String               @unique
+    gender       Gender
+    agent_status AgentStatus          @default(AVAILABLE)
+    createdAt    DateTime             @default(now())
+    updatedAt    DateTime             @updatedAt
+    assignments  DeliveryAssignment[]
+}
+
+model DeliveryAssignment {
+    id          String         @id @default(uuid())
+    orderId     String         @unique
+    agentId     String
+    status      DeliveryStatus @default(PENDING)
+    assignedAt  DateTime       @default(now())
+    completedAt DateTime?
+    rating      Float?
+    agent       DilveryAgent   @relation(fields: [agentId], references: [id])
+}

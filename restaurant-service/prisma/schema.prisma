@@ -1,0 +1,91 @@
+generator client {
+    provider  = "prisma-client-py"
+    interface = "asyncio"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum FoodType {
+    VEG
+    NON_VEG
+}
+
+enum Status {
+    ONLINE
+    OFFLINE
+}
+
+enum OrderStatus {
+    PENDING
+    CONFIRMED
+    CANCELLED
+}
+
+model Restaurant {
+    id           String   @id @default(uuid())
+    name         String   @unique
+    description  String?
+    opening_time String
+    closing_time String
+    rating       Float?
+    status       Status   @default(ONLINE)
+    created_at   DateTime @default(now())
+
+    menu   MenuItem[]
+    orders Order[]
+}
+
+model MenuItem {
+    id          String   @id @default(uuid())
+    name        String
+    description String?
+    price       Float
+    type        FoodType
+    created_at  DateTime @default(now())
+
+    restaurant_id String
+    restaurant    Restaurant  @relation(fields: [restaurant_id], references: [id])
+    order_items   OrderItem[]
+}
+
+model OrderGroup {
+    id           String      @id @default(uuid())
+    user_id      String
+    status       OrderStatus @default(PENDING) 
+    rating       Float?
+    placed_at    DateTime    @default(now())
+    updated_at   DateTime    @updatedAt
+
+    orders Order[]
+}
+
+model Order {
+    id         String      @id @default(uuid())
+    user_id    String
+    status     OrderStatus
+    placed_at  DateTime    @default(now())
+    updated_at DateTime    @updatedAt
+
+    order_group_id String
+    order_group    OrderGroup @relation(fields: [order_group_id], references: [id])
+
+    restaurant_id String
+    restaurant    Restaurant @relation(fields: [restaurant_id], references: [id])
+
+    items OrderItem[]
+}
+
+model OrderItem {
+    id       String @id @default(uuid())
+    order_id String
+    order    Order  @relation(fields: [order_id], references: [id])
+
+    menu_item_id String
+    menu_item    MenuItem @relation(fields: [menu_item_id], references: [id])
+
+    quantity Int
+    price    Float
+}

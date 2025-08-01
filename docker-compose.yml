@@ -1,0 +1,129 @@
+name: food-dilvery-container
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  postgres_user:
+    image: postgres:16
+    container_name: postgres_user
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: user_service
+    ports:
+      - "5554:5432"
+    volumes:
+      - user_service:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres_restaurant:
+    image: postgres:16
+    container_name: postgres_restaurant
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: restaurant_service
+    ports:
+      - "5555:5432"
+    volumes:
+      - restaurant_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres_delivery:
+    image: postgres:16
+    container_name: postgres_delivery
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: delivery_service
+    ports:
+      - "5556:5432"
+    volumes:
+      - delivery_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  user_service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user_service
+    env_file:
+      - ./user-service/.env
+    ports:
+      - "8001:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres_user:
+        condition: service_healthy
+
+  restaurant_service:
+    build:
+      context: ./restaurant-service
+      dockerfile: Dockerfile
+    container_name: restaurant_service
+    env_file:
+      - ./restaurant-service/.env
+    ports:
+      - "8002:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres_restaurant:
+        condition: service_healthy
+
+  delivery_service:
+    build:
+      context: ./delivery-service
+      dockerfile: Dockerfile
+    container_name: delivery_service
+    env_file:
+      - ./delivery-service/.env
+    ports:
+      - "8003:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      postgres_delivery:
+        condition: service_healthy
+
+volumes:
+  restaurant_data:
+  delivery_data:
+  user_service:
