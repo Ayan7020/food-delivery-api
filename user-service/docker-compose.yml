@@ -23,6 +23,8 @@ services:
             condition: service_healthy
     environment:
         - .env 
+    ports:
+        - "8000:8000"
 
 volumes: 
   user_service:
