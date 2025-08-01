@@ -6,6 +6,11 @@ A comprehensive microservices-based food delivery platform built with Python Fas
 
 This system follows a **microservices architecture** with event-driven communication patterns, ensuring scalability, maintainability, and fault tolerance.
 
+#### **Important Note**: 
+⚠️ **Always use the main `docker-compose.yml` file in the root directory to run the entire system.** 
+
+**DO NOT** try to run individual services separately using their own docker-compose files, as this will require manual configuration of Redis, RabbitMQ, and database connections. The individual service docker-compose files are intended for production deployment scenarios only.
+
 ### Architecture Overview
 
 ```
@@ -352,6 +357,10 @@ Each microservice maintains its own dedicated PostgreSQL database, ensuring:
 - Docker and Docker Compose
 - Python 3.11+
 
+### 🐳 Docker Deployment (Recommended)
+
+
+
 ### Installation & Setup
 
 1. **Clone the repository**
@@ -382,10 +391,55 @@ Each microservice maintains its own dedicated PostgreSQL database, ensuring:
    RABBIT_MQ="amqp://guest:guest@rabbitmq:5672/"
    ```
 
-3. **Start the system**
+3. **Start the Complete System**
    ```bash
+   # Start all services, databases, and message brokers
    docker-compose up -d
+   
+   # Check if all services are running
+   docker-compose ps
+   
+   # View logs for debugging (optional)
+   docker-compose logs -f
    ```
+
+4. **Database Migration** (If needed)
+   ```bash
+   # The system should auto-migrate on startup, but if manual migration is needed:
+   docker-compose exec user_service npx prisma migrate dev
+   docker-compose exec restaurant_service npx prisma migrate dev
+   docker-compose exec delivery_service npx prisma migrate dev
+   ```
+
+### 🏗️ Docker Architecture
+
+The system uses a multi-container Docker setup with the following structure:
+
+```
+├── docker-compose.yml              # Main orchestration file (USE THIS)
+├── user-service/
+│   ├── Dockerfile                  # User service container
+│   └── docker-compose.yml          # Individual service (DEPLOYMENT ONLY)
+├── restaurant-service/
+│   ├── Dockerfile                  # Restaurant service container
+│   └── docker-compose.yml          # Individual service (DEPLOYMENT ONLY)
+└── delivery-service/
+    ├── Dockerfile                  # Delivery service container
+    └── docker-compose.yml          # Individual service (DEPLOYMENT ONLY)
+```
+
+### 🔄 Development vs Production
+
+#### **Development (Local Testing)**
+- **Use**: Main `docker-compose.yml` in root directory
+- **Purpose**: Complete system with all dependencies
+- **Command**: `docker-compose up -d`
+
+#### **Production Deployment**
+- **Use**: Individual service `docker-compose.yml` files
+- **Purpose**: Independent service deployment
+- **Requirements**: External Redis, RabbitMQ, and database configuration
+- **Use Case**: Kubernetes, Docker Swarm, or separate cloud deployments
 
 ### Service URLs
 - **User Service**: http://localhost:8001
