@@ -377,6 +377,9 @@ Each microservice maintains its own dedicated PostgreSQL database, ensuring:
    DATABASE_URL="postgresql://postgres:password123@postgres_user:5432/user_service"
    RABBIT_MQ="amqp://guest:guest@rabbitmq:5672/"
    REDIS_URL="redis://redis:6379"
+   RESTAURANT_SERVICE_URL=http://restaurant_service:8000
+   AGENT_SERVICE_URL=http://delivery_service:8000
+
    ```
    
    **restaurant-service/.env**:
