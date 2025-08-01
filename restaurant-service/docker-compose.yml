@@ -1,0 +1,30 @@
+services:
+  postgres_restaurant:
+    image: postgres:16
+    container_name: postgres_restaurant
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: restaurant_service
+    ports:
+      - "5555:5432"
+    volumes:
+      - restaurant_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  restaurant_service: 
+    build: .
+    depends_on:
+        postgres_restaurant:
+            condition: service_healthy
+    environment:
+        - .env 
+    ports:
+        - "8000:8000"
+
+volumes: 
+  restaurant_data:
